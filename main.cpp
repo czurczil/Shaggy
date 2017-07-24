@@ -215,27 +215,15 @@ int main()
         {
             robot.SetWheel(0,0);
             rightTimestamp = robotState.microsTimestamp - stopTimestamp;
-            unsigned long returnTimestamp = robotState.microsTimestamp;
-            robot.SetWheel(-40,40);
-            if(robotState.microsTimestamp == returnTimestamp + rightTimestamp + 1000)
-            {
-                printf("asdqwe \n");
-                robot.SetWheel(0,0);
-            }
             printf("Right: %lu \n", rightTimestamp);
+            robot.SetWheel(-40,40);
             stopTimestamp = 0;
         }
         else if(robotState.distRight < 15.0 && leftTimestamp == 0 && checkTimespans == true)
         {
             robot.SetWheel(0,0);
             leftTimestamp = robotState.microsTimestamp - stopTimestamp;
-            unsigned long returnTimestamp = robotState.microsTimestamp;
             robot.SetWheel(40,-40);
-            if(robotState.microsTimestamp == returnTimestamp + leftTimestamp + 1000)
-            {
-                printf("asdqwe \n");
-                robot.SetWheel(0,0);
-            }
             printf("Left: %lu \n", leftTimestamp);
             stopTimestamp = 0;
         }
