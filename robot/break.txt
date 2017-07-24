@@ -1,0 +1,32 @@
+VARIABLES
+$norm=90
+$skr1=50
+$skr2=70
+$normu=-90
+$skr1u=-50
+$skr2u=-70
+VARIABLES_END
+
+PROCEDURES
+
+proc krok1
+set $norm $norm 320
+set $normu $normu 160
+end_proc
+
+
+proc piruet_p
+set 100 -100 400
+end_proc
+
+PROCEDURES_END
+
+PROGRAM
+loop 5
+loop 10
+call krok1
+end_loop
+call piruet_p
+end_loop
+set 0 0 100
+PROGRAM_END

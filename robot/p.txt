@@ -1,0 +1,55 @@
+VARIABLES
+$start=-30
+
+VARIABLES_END
+
+PROCEDURES
+
+proc krok1
+set $norm $norm $tprost
+set $skr1 $skr2 $tturn
+end_proc
+
+
+
+PROCEDURES_END
+
+PROGRAM
+
+set 0 0 3500
+
+set 30 30 1600
+set 0 0 1400
+set -30 -30 1600
+set 0 0 1400
+set 40 40 1600
+set 0 0 1400
+set -40 -40 1600
+set 0 0 1400
+set 50 50 1600
+set 0 0 1400
+set -50 -50 1600
+set 0 0 1400
+set 60 60 1600
+set 0 0 1400
+set -60 -60 1600
+set 0 0 1400
+set 70 70 1600
+set 0 0 1400
+set -70 -70 1600
+set 0 0 1400
+set 80 80 1600
+set 0 0 1400
+set -80 -80 1600
+set 0 0 1400
+set 90 90 1600
+set 0 0 1400
+set -90 -90 1600
+set 0 0 1400
+set 100 100 1600
+set 0 0 1400
+set -100 -100 1600
+
+set 0 0 100
+PROGRAM_END
+

@@ -1,0 +1,30 @@
+VARIABLES
+$start=40
+$start1=40
+$back=-40
+$tprost=2000
+VARIABLES_END
+
+PROCEDURES
+
+proc krok1
+set $start $start1 $tprost
+set 0 0 500
+set $back $back $tprost
+set 0 0 500
+end_proc
+
+
+
+PROCEDURES_END
+
+PROGRAM
+set 0 0 2000
+
+LOOP 3
+krok1
+END_LOOP
+
+set 0 0 2000
+PROGRAM_END
+

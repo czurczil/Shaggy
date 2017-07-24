@@ -1,0 +1,58 @@
+VARIABLES
+$norm=90
+$skr1=20
+$skr2=90
+$normu=-90
+$skr1u=-20
+$skr2u=-90
+
+$tprost=600
+$tturn=300
+$tpir1=600
+$tpir2=300
+
+VARIABLES_END
+
+PROCEDURES
+
+proc krok1
+set $norm $norm $tprost
+set $skr1 $skr2 $tturn
+end_proc
+
+proc krok2
+set $skr1u $skr2u $tturn
+set $normu $normu $tprost
+end_proc
+
+proc krok3
+set $norm $norm $tprost
+set $skr2 $skr1 $tturn
+end_proc
+
+proc krok4
+set $skr2u $skr1u $tturn
+set $normu $normu $tprost
+end_proc
+
+proc piruet_p
+set 90 -80 $tpir1
+set 90 00 $tpir2
+end_proc
+
+PROCEDURES_END
+
+PROGRAM
+loop 2
+loop 5
+call krok1
+call krok2
+call krok3
+call krok4
+end_loop
+loop 10
+call piruet_p
+end_loop
+end_loop
+set 0 0 100
+PROGRAM_END

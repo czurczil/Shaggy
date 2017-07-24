@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<CodeBlocks_project_file>
+	<FileVersion major="1" minor="6" />
+	<Project>
+		<Option title="robot" />
+		<Option pch_mode="2" />
+		<Option compiler="gcc" />
+		<Build>
+			<Target title="Debug">
+				<Option output="bin/Debug/robot" prefix_auto="1" extension_auto="1" />
+				<Option object_output="obj/Debug/" />
+				<Option type="1" />
+				<Option compiler="gcc" />
+				<Compiler>
+					<Add option="-std=c++11" />
+					<Add option="-g" />
+					<Add directory="../../../rpi" />
+					<Add directory="../../../rpi/GY-80-imu" />
+					<Add directory="/usr/local/include/mongocxx/v_noabi" />
+					<Add directory="/usr/local/include/bsoncxx/v_noabi" />
+					<Add directory="/usr/local/include/libmongoc-1.0" />
+					<Add directory="/usr/local/include/libbson-1.0" />
+				</Compiler>
+				<Linker>
+					<Add library="wiringPi" />
+					<Add library="bsoncxx" />
+					<Add library="mongocxx" />
+					<Add directory="/usr/local/lib" />
+				</Linker>
+			</Target>
+			<Target title="Release">
+				<Option output="bin/Release/robot" prefix_auto="1" extension_auto="1" />
+				<Option object_output="obj/Release/" />
+				<Option type="1" />
+				<Option compiler="gcc" />
+				<Compiler>
+					<Add option="-O2" />
+				</Compiler>
+				<Linker>
+					<Add option="-s" />
+				</Linker>
+			</Target>
+		</Build>
+		<Compiler>
+			<Add option="-Wall" />
+		</Compiler>
+		<Unit filename="../../GY-80-imu/ADXL345.cpp" />
+		<Unit filename="../../GY-80-imu/ADXL345.h" />
+		<Unit filename="../../GY-80-imu/BMP085.cpp" />
+		<Unit filename="../../GY-80-imu/BMP085.h" />
+		<Unit filename="../../GY-80-imu/HMC5883L.cpp" />
+		<Unit filename="../../GY-80-imu/HMC5883L.h" />
+		<Unit filename="../../I2CRPI.cpp" />
+		<Unit filename="../../I2CRPI.h" />
+		<Unit filename="../DB.cpp" />
+		<Unit filename="../DB.h" />
+		<Unit filename="../main.cpp" />
+		<Unit filename="../robot.cpp" />
+		<Unit filename="../robot.h" />
+		<Unit filename="../terminal_functions.cpp" />
+		<Unit filename="../terminal_functions.h" />
+		<Unit filename="../utils.cpp" />
+		<Unit filename="../utils.h" />
+		<Unit filename="break.txt" />
+		<Unit filename="katy.txt" />
+		<Unit filename="lodka.txt" />
+		<Unit filename="obrot.txt" />
+		<Unit filename="r1.txt" />
+		<Unit filename="walc.txt" />
+		<Extensions>
+			<code_completion />
+			<debugger />
+		</Extensions>
+	</Project>
+</CodeBlocks_project_file>

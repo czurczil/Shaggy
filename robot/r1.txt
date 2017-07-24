@@ -1,0 +1,28 @@
+VARIABLES
+$pv=99
+$mv=-99
+$ft=3000
+$bt=3000
+
+VARIABLES_END
+
+PROCEDURES
+
+proc fw
+set $pv $pv $ft
+end_proc
+
+proc bw
+set $mv $mv $bt
+end_proc
+
+PROCEDURES_END
+
+PROGRAM
+loop 3
+call fw
+call bw
+end_loop
+set 0 0 100
+PROGRAM_END
+
