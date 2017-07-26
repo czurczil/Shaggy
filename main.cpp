@@ -144,8 +144,11 @@ int main()
 
     bool checkTimespans = false;
     unsigned long stopTimestamp = 0;
-    unsigned long rightTimestamp = 0;
     unsigned long leftTimestamp = 0;
+    unsigned long returnLeftTimestamp = 0;
+    unsigned long rightTimestamp = 0;
+    unsigned long returnRightTimestamp = 0;
+    unsigned long rightSum = 0;
     /*Main loop*/
     while(kb!= 'q')
     {
@@ -182,8 +185,8 @@ int main()
         }
         robot.GetState(&robotState);
         // TODO log
-        printf("%4.1f | %c | %4.1f | %4.1f | %lu \n", robotState.distFront, lastKb, robotState.distLeft, robotState.distRight, robotState.microsTimestamp);
-
+        printf("%4.1f | %c | %4.1f | %4.1f | %lu | %lu \n", robotState.distFront, lastKb, robotState.distLeft, robotState.distRight, robotState.microsTimestamp, rightSum);
+        printf("%lu | %lu \n", leftTimestamp, rightTimestamp);
         /* MongoDB*/
         //db.WriteState(&robotState);
 
@@ -193,15 +196,14 @@ int main()
         /* Process */
         //ProcessCommand(command,&robot, &robotState, &db);
 
-        if(robotState.distFront < 15.0 && lastKb == 'w')
+
+        if(robotState.distFront < 15.0 && lastKb == 'w' && stopTimestamp == 0 && rightSum == 0)
         {
-            if(stopTimestamp == 0)
-            {
-                checkTimespans = true;
-                robot.SetWheel(0,0);
-                stopTimestamp = robotState.microsTimestamp;
-                printf("Stop: %lu \n", stopTimestamp);
-            }
+            checkTimespans = true;
+            robot.SetWheel(0,0);
+            stopTimestamp = robotState.microsTimestamp;
+            printf("Stop: %lu \n", stopTimestamp);
+
             if(rightTimestamp == 0)
             {
                 robot.SetWheel(40,-40);
@@ -210,28 +212,43 @@ int main()
             {
                 robot.SetWheel(-40,40);
             }
+            if(leftTimestamp != 0 && rightTimestamp != 0)
+            {
+                printf("LeftTimestamp: %lu | RightTimestamp: %lu", leftTimestamp, rightTimestamp);
+                break;
+            }
         }
-        if(robotState.distLeft < 15.0 && rightTimestamp == 0 && checkTimespans == true)
+        if(robotState.distLeft < 25.0 && rightTimestamp == 0 && checkTimespans == true)
         {
             robot.SetWheel(0,0);
-            rightTimestamp = robotState.microsTimestamp - stopTimestamp;
+
+            returnRightTimestamp = robotState.microsTimestamp;
+
+            rightTimestamp = returnRightTimestamp - stopTimestamp;
+            rightSum = returnRightTimestamp + rightTimestamp;
             printf("Right: %lu \n", rightTimestamp);
             robot.SetWheel(-40,40);
             stopTimestamp = 0;
         }
-        else if(robotState.distRight < 15.0 && leftTimestamp == 0 && checkTimespans == true)
+        if(robotState.distRight < 25.0 && leftTimestamp == 0 && rightTimestamp != 0 && checkTimespans == true)
         {
             robot.SetWheel(0,0);
-            leftTimestamp = robotState.microsTimestamp - stopTimestamp;
-            robot.SetWheel(40,-40);
+            returnLeftTimestamp = robotState.microsTimestamp;
+            leftTimestamp = returnLeftTimestamp - stopTimestamp;
             printf("Left: %lu \n", leftTimestamp);
+            robot.SetWheel(40,-40);
             stopTimestamp = 0;
         }
-        if(leftTimestamp != 0 && rightTimestamp != 0)
+        if((rightSum) < robotState.microsTimestamp && rightSum != 0)
         {
             robot.SetWheel(0,0);
-            printf("LeftTimestamp: %lu | RightTimestamp: %lu", leftTimestamp, rightTimestamp);
-            break;
+            printf("righttimestampstop");
+            rightSum = 0;
+        }
+        if(rightSum > robotState.microsTimestamp )
+        {
+            printf("righttimestamp");
+            robot.Cycle();
         }
         robot.Cycle();
         /* Output */
