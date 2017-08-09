@@ -117,7 +117,7 @@ int main()
     robot.Cycle(); //first cycle
 
     stringstream fnamestream;
-    fnamestream <<"log_robot.csv";
+    fnamestream << "log_" << time(NULL) <<"_robot.csv";
     string fname= fnamestream.str();
     robot.StartLog(fname);
 
@@ -127,7 +127,14 @@ int main()
     unsigned long rightTimestamp = 0;
     unsigned long returnRightTimestamp = 0;
     unsigned long rightSum = 0;
+    unsigned long leftSum = 0;
+    unsigned long roundTimestamp = 0;
+    unsigned long roundTime = 100000;
+    float stopAngle = 0.0;
+    float bypassingAngle = 0.0;
     int state = 0;
+    bool left = false;
+    bool right = false;
     /*Main loop*/
     while(kb!= 'q')
     {
@@ -144,16 +151,16 @@ int main()
                 print_main_menu();
                 break;
             case 'w':
-                robot.SetWheel(40,40);
+                robot.SetWheel(50,50);
                 break;
             case 's':
-                robot.SetWheel(-40,-40);
+                robot.SetWheel(-50,-50);
                 break;
             case 'a':
-                robot.SetWheel(-40,0);
+                robot.SetWheel(-50,0);
                 break;
             case 'd':
-                robot.SetWheel(0,-40);
+                robot.SetWheel(0,-50);
                 break;
             case 'e':
                 robot.SetWheel(0,0);
@@ -165,7 +172,9 @@ int main()
         robot.GetState(&robotState);
         // TODO log
         printf("%4.1f | %c | %4.1f | %4.1f | state=%i \n", robotState.distFront, lastKb, robotState.distLeft, robotState.distRight, state);
-        printf("%lu | %lu \n", leftTimestamp, rightTimestamp);
+        printf("%lu| %lu \n", robotState.microsTimestamp, roundTimestamp);
+        //printf("%f | %f \n", stopAngle, bypassingAngle);
+        //printf("%lu | %lu \n", leftTimestamp, rightTimestamp);
         /* MongoDB*/
         //db.WriteState(&robotState);
 
@@ -175,22 +184,27 @@ int main()
         /* Process */
         //ProcessCommand(command,&robot, &robotState, &db);
 
-        if(robotState.distFront < 15.0 && lastKb == 'w' && state == 0)
+        if(robotState.distFront < 25.0 && lastKb == 'w' && state == 0)
         {
+            robot.SetWheel(30,30);
             state = 1;
         }
 
         switch(state)
         {
         case 1://napotkanie przeszkody i skret w lewo
-            robot.SetWheel(0,0);
-            stopTimestamp = robotState.microsTimestamp;
-            printf("Stop: %lu \n", stopTimestamp);
-
-            if(rightTimestamp == 0)
+            if(robotState.distFront < 15.0 )
             {
-                robot.SetWheel(40,-40);
-                state = 2;
+                stopAngle = robot.GetAngle();
+                robot.SetWheel(0,0);
+                stopTimestamp = robotState.microsTimestamp;
+                printf("Stop: %lu \n", stopTimestamp);
+
+                if(rightTimestamp == 0)
+                {
+                    robot.SetWheel(50,-50);
+                    state = 2;
+                }
             }
             break;
         case 2://policzenie czasu do napotkania krawedzi z lewego czujnika i odkrecanie w lewo
@@ -201,9 +215,9 @@ int main()
                 returnRightTimestamp = robotState.microsTimestamp;
 
                 rightTimestamp = returnRightTimestamp - stopTimestamp;
-                rightSum = returnRightTimestamp + rightTimestamp;
+                rightSum = returnRightTimestamp + rightTimestamp + 100000;
                 printf("Right: %lu \n", rightTimestamp);
-                robot.SetWheel(-40,40);
+                robot.SetWheel(-50,50);
                 state = 4;
             }
             break;
@@ -213,8 +227,9 @@ int main()
                 robot.SetWheel(0,0);
                 returnLeftTimestamp = robotState.microsTimestamp;
                 leftTimestamp = returnLeftTimestamp - stopTimestamp;
+                leftSum = returnLeftTimestamp + leftTimestamp + 100000;
                 printf("Left: %lu \n", leftTimestamp);
-                robot.SetWheel(40,-40);
+                robot.SetWheel(50,-50);
                 state = 5;
             }
             break;
@@ -224,27 +239,32 @@ int main()
                 printf("righttimestamp");
                 robot.Cycle();
             }
-            else if(rightSum < robotState.microsTimestamp)
+            if(rightSum < robotState.microsTimestamp)
             {
                 robot.SetWheel(0,0);
                 stopTimestamp = robotState.microsTimestamp;
-                printf("righttimestampstop");
-                robot.SetWheel(-40,40);
+                printf("righttimestampstop: %lu \n", stopTimestamp);
+                robot.SetWheel(-50,50);
                 state = 3;
             }
             break;
-        case 5://po powrocie do pierwszej pozycji wypisanie czasow skretu w lewo i prawo
-            if(robotState.distFront < 15.0)
+        case 5://po powrocie do pierwszej pozycji zatrzymanie i wypisanie czasow skretu w lewo i prawo
+            if(leftSum > robotState.microsTimestamp )
             {
-                printf("LeftTimestamp: %lu | RightTimestamp: %lu", leftTimestamp, rightTimestamp);
+                printf("lefttimestamp");
+                robot.Cycle();
+            }
+            else if(leftSum < robotState.microsTimestamp)
+            {
+                robot.SetWheel(0,0);
+                printf("LeftTimestamp: %lu | RightTimestamp: %lu \n", leftTimestamp, rightTimestamp);
                 state = 6;
             }
             break;
-        case 6://zatrzymanie i obliczenie kierunku objazdu przszkody
-            robot.SetWheel(0,0);
+        case 6://obliczenie kierunku objazdu przeszkody
             if(rightTimestamp > leftTimestamp)
             {
-                state = 7;
+                state = 8;
             }
             else if(leftTimestamp > rightTimestamp)
             {
@@ -252,17 +272,75 @@ int main()
             }
             break;
         case 7://ominiecie przeszkody z prawej strony
+            right = true;
             robot.SetWheel(40,-40);
+            printf("obrot w prawo");
+            stopTimestamp = robotState.microsTimestamp;
+            roundTimestamp = stopTimestamp + 1000000;
             state = 9;
             break;
         case 8://ominiecie przeszkody z lewej strony
+            left = true;
             robot.SetWheel(-40,40);
+            stopTimestamp = robotState.microsTimestamp;
+            roundTimestamp = stopTimestamp + 1000000;
             state = 9;
             break;
         case 9://ruch do przodu
-            if(robotState.distFront > 20.0)
+            if(robotState.distFront > 50.0)
             {
+                printf("do przodu \n");
                 robot.SetWheel(40,40);
+                state = 10;
+            }
+        case 10:
+            if(right && robotState.microsTimestamp > roundTimestamp)
+            {
+                //stopTimestamp = robotState.microsTimestamp;
+                //roundTimestamp = stopTimestamp + roundTime;
+                state = 11;
+            }
+            else if(left && robotState.microsTimestamp > roundTimestamp)
+            {
+                //stopTimestamp = robotState.microsTimestamp;
+                //roundTimestamp = stopTimestamp + roundTime;
+                state = 12;
+            }
+            break;
+        case 11://obrkazanie z prawej
+            if(robotState.distLeft > 30.0)
+            {
+                printf("w lewo \n");
+                robot.SetWheel(-40,40);
+            }
+            else if(robotState.distLeft < 30.0)
+            {
+                stopTimestamp = robotState.microsTimestamp;
+                roundTimestamp = stopTimestamp + roundTime;
+                state = 9;
+            }
+            else
+            {
+                printf("nie znalazl \n");
+                robot.SetWheel(0,0);
+            }
+            break;
+        case 12://obkrazanie z lewej
+            if(robotState.distRight > 30.0)
+            {
+                printf("w prawo \n");
+                robot.SetWheel(40,-40);
+            }
+            else if(robotState.distRight < 30.0)
+            {
+                stopTimestamp = robotState.microsTimestamp;
+                roundTimestamp = stopTimestamp + roundTime;
+                state = 9;
+            }
+            else
+            {
+                printf("nie znalazl \n");
+                robot.SetWheel(0,0);
             }
             break;
         default:
