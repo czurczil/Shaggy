@@ -109,6 +109,7 @@ void robot_regulacja_odleglosci_prawy(float distRight, float stopAngle)
     cout<<"Regulacja odleglosci prawy czujnik"<<endl;
 
     char c=0;
+    float temp_stop;
     ostringstream fnamestream;
     fnamestream <<"log_"<<time(NULL)<<".csv";
     string fname= fnamestream.str();
@@ -119,9 +120,19 @@ void robot_regulacja_odleglosci_prawy(float distRight, float stopAngle)
     float kp=0.5;
     int next_loop = 0;
     float speed=0, speed_template=40;
-    while(currentAngle < stopAngle + 90)
+
+    if(stopAngle + 90 > 360) temp_stop = stopAngle - 360;
+	else temp_stop = stopAngle;
+
+    while(true)
     {
         currentAngle = robot.GetAngle();
+
+        if(currentAngle >= temp_stop + 90 && currentAngle < temp_stop + 90 + 10)
+        {
+            break;
+        }
+
         float ym=robot.GetDistRight();
         if(next_loop == 0)
         {
@@ -370,79 +381,34 @@ int main()
             if(robotState.distRight < 25.0 || robotState.distLeft < 25.0)
             {
                 robot_regulacja_odleglosci_prawy(robotState.distRight, stopAngle);
+                robot.SetWheel(0,0);
                 state = 10;
             }
             break;
         case 10:
-            robot.SetWheel(0,0);
+            robot.SetWheel(50,-50);
+            state = 11;
             break;
-        /*case 9://ruch do przodu
-               if(robotState.distRight <  25.0 || robotState.distLeft < 25.0)
-               {
-                   printf("do przodu \n");
-                   robot.SetWheel(40,40);
-                   state = 10;
-               }
-               break;
-           case 10:
-               if(right && robotState.microsTimestamp > roundTimestamp)
-               {
-                   //stopTimestamp = robotState.microsTimestamp;
-                   //roundTimestamp = stopTimestamp + roundTime;
-                   state = 11;
-               }
-               else if(left && robotState.microsTimestamp > roundTimestamp)
-               {
-                   //stopTimestamp = robotState.microsTimestamp;
-                   //roundTimestamp = stopTimestamp + roundTime;
-                   state = 12;
-               }
-               break;
-           case 11://obrkazanie z prawej
-               if(robotState.distLeft > 50.0)
-               {
-                   printf("w lewo \n");
-                   robot.SetWheel(-40,40);
-               }
-               else if(robotState.distLeft < 50.0)
-               {
-                   stopTimestamp = robotState.microsTimestamp;
-                   roundTimestamp = stopTimestamp + roundTime;
-                   state = 9;
-               }
-               else if(robot.GetAngle() - 15 > stopAngle + 90)
-               {
-
-               }
-               else
-               {
-                   printf("nie znalazl \n");
-                   robot.SetWheel(0,0);
-               }
-               break;
-           case 12://obkrazanie z lewej
-               if(robotState.distRight > 50.0)
-               {
-                   printf("w prawo \n");
-                   robot.SetWheel(40,-40);
-               }
-               else if(robotState.distRight < 50.0)
-               {
-                   stopTimestamp = robotState.microsTimestamp;
-                   roundTimestamp = stopTimestamp + roundTime;
-                   state = 9;
-               }
-               else if(robot.GetAngle() - 15 > stopAngle + 90)
-               {
-
-               }
-               else
-               {
-                   printf("nie znalazl \n");
-                   robot.SetWheel(0,0);
-               }
-               break;
-        */
+        case 11:
+            float currentAngle;
+            currentAngle = robot.GetAngle();
+            if(currentAngle > stopAngle && currentAngle < stopAngle + 10)
+            {
+                robot.SetWheel(0,0);
+                state = 12;
+            }
+            break;
+        case 12:
+            robot.SetWheel(50,50);
+            state = 13;
+            break;
+        case 13:
+            if(robotState.distFront < 15.0)
+            {
+                robot.SetWheel(0,0);
+                break;
+            }
+            break;
         default:
             robot.Cycle();
         }
