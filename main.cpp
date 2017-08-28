@@ -22,77 +22,123 @@
 
 using namespace std;
 
+void test_prawy();
 
-void robot_info(void)
+void eksperyment1()
 {
-    printf("\r\nRobot Kudlaty (2016) oparty o podzespoly\r\n");
-    printf("- podwozie uniwersalne trzykolowe z dwoma silnikami DC\r\n");
-    printf("- komputer RaspberryPi 2\r\n");
-    printf("- modul inercyjny GY-80: ADXL245B, HMC5883L, L3G4200D, BMP085\r\n");
-    printf("- ultradzwiekowe czujniki odleglosci HC-SR04\r\n");
-    printf("- dwukanalowy kontroler silnikow DC: DRV8835\r\n");
-    printf("- czterokanalowy konwerter poziomow logicznych Sparkfun\r\n");
-    printf("- przetwornica StepUpDown zasilajaca RPI\r\n");
-    printf("- zasilanie akumulatorowe: 4 x AA NiMh\r\n");
-}
+    printf("Roznica mocy na kolach = 0");
 
+    char kb=0;
+    RobotState robotState;
+    Robot robot;
+    robot.Init();
+    robot.SetWheel(40,40); // stop
+    robot.Cycle(); //first cycle
 
-void print_main_menu(void)
-{
-    printf("Wybierz:\r\n");
-    printf("m - sterowanie reczne\r\n");
-    printf("t - wczytaj trajektorie z pliku\r\n");
-    printf("e - tryb ucieczki od przeszkody\r\n");
-    printf("k - kalibracja magnetometru (kompasu)\r\n");
-    printf("w - regulacja kata\r\n");
-    printf("o - regulacja odleglosci\r\n");
-    printf("d - kat i odleglosc\r\n");
-    printf("? - informacje o robocie\r\n");
+    stringstream fnamestream;
+    fnamestream << "log_eksperyment1_" << time(NULL) <<"_robot.csv";
+    string fname= fnamestream.str();
+    robot.StartLog(fname);
 
-}
-
-static int mtmState=0;
-int mtmCount=0;
-void MakeTerrainMap(Robot *robot, RobotState *state, DB *db)
-{
-    switch(mtmState)
+    while(kb!= 'q')
     {
-    case 0: // do nothing
-
-        break;
-    case 1:
-        db->ClearTerrainMap();
-        mtmState=2;
-        break;
-    case 2:
-        robot->SetWheel(-33,33);
-        mtmCount++;
-        if(mtmCount > 400)
+        //Input
+        kb=0;
+        if(kbhit())
         {
-            mtmState=0;
-            mtmCount=0;
-            robot->SetWheel(0,0);
+            cin>>kb;
+            usleep(200);
         }
-        db->WriteStateAsMap(state);
-        // cout<<mtmCount<<endl;
-        break;
-    default:
-        mtmState=0;
+        robot.GetState(&robotState);
+
+        robot.Cycle();
     }
+
+    robot.SetWheel(0,0);
+    robot.Cycle();
+    robot.StopLog();
 }
 
-void ProcessCommand(string cmd, Robot *robot, RobotState *state, DB *db)
+void eksperyment2()
 {
-    if(cmd == "mm")
-    {
-        mtmState=1;
-    }
-    else if(cmd == "cm")
-    {
-        db->ClearTerrainMap();
-    }
-    MakeTerrainMap(robot, state, db);
+    printf("Roznica mocy na kolach = 10");
 
+    char kb=0;
+    RobotState robotState;
+    Robot robot;
+    robot.Init();
+    robot.SetWheel(40,40); // stop
+    robot.Cycle(); //first cycle
+
+    stringstream fnamestream;
+    fnamestream << "log_eksperyment2_" << time(NULL) <<"_robot.csv";
+    string fname= fnamestream.str();
+    robot.StartLog(fname);
+
+    while(kb!= 'q')
+    {
+        //Input
+        int skip = 0;
+        kb=0;
+        if(kbhit())
+        {
+            cin>>kb;
+            usleep(200);
+        }
+        robot.GetState(&robotState);
+
+        if(robotState.distLeft > 30 && skip == 0)
+        {
+            robot.SetWheel(40,50);
+            skip = 1;
+        }
+        robot.Cycle();
+    }
+
+    robot.SetWheel(0,0);
+    robot.Cycle();
+    robot.StopLog();
+}
+
+void eksperyment3()
+{
+    printf("Roznica mocy na kolach = 30");
+
+    char kb=0;
+    RobotState robotState;
+    Robot robot;
+    robot.Init();
+    robot.SetWheel(40,40); // stop
+    robot.Cycle(); //first cycle
+
+    stringstream fnamestream;
+    fnamestream << "log_eksperyment3_" << time(NULL) <<"_robot.csv";
+    string fname= fnamestream.str();
+    robot.StartLog(fname);
+
+    while(kb!= 'q')
+    {
+        //Input
+        int skip = 0;
+        kb=0;
+        if(kbhit())
+        {
+            cin>>kb;
+            usleep(200);
+        }
+        robot.GetState(&robotState);
+
+        if(robotState.distLeft > 30 && skip == 0)
+        {
+            robot.SetWheel(30,60);
+            skip = 1;
+        }
+        robot.Cycle();
+    }
+
+    robot.SetWheel(0,0);
+    robot.Cycle();
+    robot.StopLog();
 }
 
 void robot_regulacja_odleglosci_prawy(float distRight, float stopAngle)
@@ -102,25 +148,25 @@ void robot_regulacja_odleglosci_prawy(float distRight, float stopAngle)
     cout<<"Regulacja odleglosci prawy czujnik"<<endl;
 
     float temp_stop;
-    /*ostringstream fnamestream;
-    fnamestream <<"log_"<<time(NULL)<<".csv";
+    ostringstream fnamestream;
+    fnamestream <<"log_regulacja_odleglosci_prawy"<<time(NULL)<<".csv";
     string fname= fnamestream.str();
-    robot.StartLog(fname);*/
+    robot.StartLog(fname);
     float currentAngle = 0.0;
 
     float w=distRight,e, u=0,uP,y, e_=0, Ti=1, Tc=0.02, uI, uI_=0 ,y_=0;
     float kp=0.5;
     int next_loop = 0;
-    float speed=0, speed_template=40;
+    float speed=0, speed_template=35;
 
     if(stopAngle + 90 > 360) temp_stop = stopAngle - 360;
-	else temp_stop = stopAngle;
+    else temp_stop = stopAngle;
 
     while(true)
     {
         currentAngle = robot.GetAngle();
 
-        if(currentAngle >= temp_stop + 90 && currentAngle < temp_stop + 90 + 10)
+        if(currentAngle >= temp_stop + 90 && currentAngle < temp_stop + 90 + 5)
         {
             break;
         }
@@ -174,7 +220,7 @@ void robot_regulacja_odleglosci_prawy(float distRight, float stopAngle)
     }
     robot.SetWheel(0,0);
     robot.Cycle();
-    //robot.StopLog();
+    robot.StopLog();
 }
 
 void robot_regulacja_odleglosci_lewy(float distLeft, float stopAngle)
@@ -184,25 +230,25 @@ void robot_regulacja_odleglosci_lewy(float distLeft, float stopAngle)
     cout<<"Regulacja odleglosci lewy czujnik"<<endl;
 
     float temp_stop;
-    /*ostringstream fnamestream;
-    fnamestream <<"log_"<<time(NULL)<<".csv";
+    ostringstream fnamestream;
+    fnamestream <<"log_regulacja_odleglosci_lewy_"<<time(NULL)<<".csv";
     string fname= fnamestream.str();
-    robot.StartLog(fname);*/
+    robot.StartLog(fname);
     float currentAngle = 0.0;
 
-    float w=distLeft,e, u=0,uP,y, e_=0, Ti=1.0, Tc=0.02, uI, uI_=0 ,y_=0;//Ti=1.0
+    float w=distLeft,e, u=0,uP,y, e_=0, Ti=1, Tc=0.02, uI, uI_=0 ,y_=0;//Ti=1.0
     float kp=0.5;//0.5
     int next_loop = 0;
-    float speed=0, speed_template=40;
+    float speed=0, speed_template=35;
 
     if(stopAngle - 90 < 0) temp_stop = stopAngle + 360;
-	else temp_stop = stopAngle;
+    else temp_stop = stopAngle;
 
     while(true)
     {
         currentAngle = robot.GetAngle();
 
-        if(currentAngle <= temp_stop - 90 && currentAngle > temp_stop - 90 - 10)
+        if(currentAngle <= temp_stop - 90 && currentAngle > temp_stop - 90 - 5)
         {
             break;
         }
@@ -256,7 +302,229 @@ void robot_regulacja_odleglosci_lewy(float distLeft, float stopAngle)
     }
     robot.SetWheel(0,0);
     robot.Cycle();
-    //robot.StopLog();
+    robot.StopLog();
+}
+
+int main()
+{
+
+    changemode(1); // zmiana trybu terminala na nieblokujacy
+    int priority=70;
+
+    char kb=0;
+    char lastKb = 0;
+    printf("Edukacyjny robot \"Kudlaty\" wersja 1.1 2017 \r\n");
+    int res =  piHiPri(priority);
+    printf("Ustawienie priorytetu na %i: %s\r\n",priority, (res == 0?"OK":"ERROR"));
+
+    //Inicjalizacja robota
+
+    RobotState robotState;
+    Robot robot;
+    robot.Init();
+    robot.SetWheel(0,0); // stop
+    robot.Cycle(); //first cycle
+
+    stringstream fnamestream;
+    fnamestream << "log_" << time(NULL) <<"_robot.csv";
+    string fname= fnamestream.str();
+    robot.StartLog(fname);
+
+    unsigned long stopTimestamp = 0;
+    unsigned long leftTimestamp = 0;
+    unsigned long returnLeftTimestamp = 0;
+    unsigned long rightTimestamp = 0;
+    unsigned long returnRightTimestamp = 0;
+    unsigned long rightSum = 0;
+    unsigned long leftSum = 0;
+    float stopAngle = 0.0;
+    int state = 0;
+    int last_state = 0;
+    //Main loop
+    while(kb!= 'q')
+    {
+        //Input
+        kb=0;
+        if(kbhit())
+        {
+            cin>>kb;
+            lastKb = kb;
+            switch(kb)
+            {
+            case 'w':
+                robot.SetWheel(50,50);
+                break;
+            case 's':
+                robot.SetWheel(-50,-50);
+                break;
+            case 'a':
+                robot.SetWheel(-50,0);
+                break;
+            case 'd':
+                robot.SetWheel(0,-50);
+                break;
+            case 'e':
+                robot.SetWheel(0,0);
+                break;
+            }
+            usleep(200);
+        }
+        robot.GetState(&robotState);
+
+        printf("%4.1f | %c | %4.1f | %4.1f | state=%i \n", robotState.distFront, lastKb, robotState.distLeft, robotState.distRight, state);
+
+        //printf("current=%f | stop=%f\n ", robotState.angle, stopAngle);
+
+        //printf("stopTimestamp=%lu | current=%lu | left=%lu | right=%lu \n", stopTimestamp, robotState.microsTimestamp, leftTimestamp, rightTimestamp);
+
+        if(robotState.distFront < 25.0 && lastKb == 'w' && state == 0)
+        {
+            robot.SetWheel(30,30);
+            state = 1;
+        }
+
+        switch(state)
+        {
+        case 1://napotkanie przeszkody i skret w lewo
+            if(robotState.distFront < 15.0 )
+            {
+                robot.SetWheel(0,0);
+                stopAngle = robotState.angle;
+                stopTimestamp = robotState.microsTimestamp;
+                printf("Stop: %lu \n", stopTimestamp);
+
+                robot.SetWheel(40,-40);
+                state = 2;
+            }
+            break;
+        case 2://policzenie czasu do napotkania krawedzi z lewego czujnika i odkrecanie w lewo
+            if(robotState.distFront > 50.0)
+            {
+                robot.SetWheel(0,0);
+                returnLeftTimestamp = robotState.microsTimestamp;
+                leftTimestamp = robotState.microsTimestamp - stopTimestamp;
+                leftSum = returnLeftTimestamp + leftTimestamp + 100000;
+                printf("Left: %lu \n", leftTimestamp);
+                robot.SetWheel(-40,40);
+                state = 4;
+            }
+            break;
+        case 3://policzenie czasu do napotkania krawedzi z prawego czujnika i odkrecanie w prawo
+            if(robotState.distFront > 50.0)
+            {
+                robot.SetWheel(0,0);
+                returnRightTimestamp = robotState.microsTimestamp;
+                rightTimestamp = returnRightTimestamp - stopTimestamp;
+                rightSum = returnRightTimestamp + rightTimestamp + 100000;
+                printf("Right: %lu \n", rightTimestamp);
+                robot.SetWheel(40,-40);
+                state = 5;
+            }
+            break;
+        case 4://powrot do wczesniejszej pozycji (na podstawie czasu skretu w prawo) i odkrecanie w lewo
+            if(leftSum > robotState.microsTimestamp )
+            {
+                robot.Cycle();
+            }
+            if(leftSum < robotState.microsTimestamp || (robotState.angle >= stopAngle && robotState.angle < stopAngle + 2))
+            {
+                robot.SetWheel(0,0);
+                stopTimestamp = robotState.microsTimestamp;
+                printf("lefttimestampstop: %lu \n", stopTimestamp);
+                robot.SetWheel(-40,40);
+                state = 3;
+            }
+            break;
+        case 5://po powrocie do pierwszej pozycji zatrzymanie i wypisanie czasow skretu w lewo i prawo
+            if(rightSum > robotState.microsTimestamp)
+            {
+                robot.Cycle();
+            }
+            else if(rightSum < robotState.microsTimestamp || (robotState.angle <= stopAngle && robotState.angle > stopAngle - 2))
+            {
+                robot.SetWheel(0,0);
+                printf("LeftTimestamp: %lu | RightTimestamp: %lu \n", leftTimestamp, rightTimestamp);
+                state = 6;
+            }
+            break;
+        case 6://obliczenie kierunku objazdu przeszkody
+            if(rightTimestamp < leftTimestamp)
+            {
+                state = 7;
+            }
+            else if(leftTimestamp < rightTimestamp)
+            {
+                state = 8;
+            }
+            break;
+        case 7://ominiecie przeszkody z prawej strony
+            robot.SetWheel(40,-40);
+            last_state = 7;
+            state = 9;
+            break;
+        case 8://ominiecie przeszkody z lewej strony
+            robot.SetWheel(-40,40);
+            last_state = 8;
+            state = 9;
+            break;
+        case 9://okrazanie przeszkody z lewej lub prawej strony
+            if(last_state == 8 &&robotState.distRight < 25.0)
+            {
+                robot_regulacja_odleglosci_prawy(robotState.distRight, stopAngle);
+                robot.SetWheel(0,0);
+                state = 10;
+            }
+            if(last_state == 7 && robotState.distLeft < 25.0)
+            {
+                robot_regulacja_odleglosci_lewy(robotState.distLeft, stopAngle);
+                robot.SetWheel(0,0);
+                state = 11;
+            }
+            break;
+        case 10:
+            robot.SetWheel(40,-40);
+            state = 12;
+            break;
+        case 11:
+            robot.SetWheel(-40,40);
+            state = 12;
+            break;
+        case 12:
+            if(robotState.angle > stopAngle && robotState.angle < stopAngle + 10)
+            {
+                robot.SetWheel(0,0);
+                state = 13;
+            }
+            break;
+        case 13:
+            robot.SetWheel(50,50);
+            state = 14;
+            break;
+        case 14:
+            if(robotState.distFront < 15.0)
+            {
+                robot.SetWheel(0,0);
+                break;
+            }
+            break;
+        default:
+            robot.Cycle();
+        }
+
+        //Output
+        robot.Cycle();
+    }
+    //test_prawy();
+    //eksperyment1();
+    //eksperyment2();
+    //eksperyment3();
+
+    robot.SetWheel(0,0);
+    robot.Cycle();
+    robot.StopLog();
+    changemode(0);
+
+    return 0;
 }
 
 void test_prawy()
@@ -266,14 +534,13 @@ void test_prawy()
     cout<<"Regulacja odleglosci prawy czujnik"<<endl;
 
     char c=0;
-      /*ostringstream fnamestream;
-                        fnamestream <<"log_"<<time(NULL)<<".csv";
-                        string fname= fnamestream.str();
-                        robot.StartLog(fname);*/
+    /*ostringstream fnamestream;
+                      fnamestream <<"log_"<<time(NULL)<<".csv";
+                      string fname= fnamestream.str();
+                      robot.StartLog(fname);*/
     char auto_mode=0, stan=0;
-    float w=20,e,um=0, u=0,uP,y, e_=0, Ti=1, Tc=0.02, uI, uI_=0 ,y_=0;
-//    float w_=0;
-    float kp=0.5;
+    float w=180,e,um=0, u=0,uP,y, e_=0, Ti=2.0, Tc=0.02, uI, uI_=0 ,y_=0;//Ti=1.0
+    float kp=1.0;//0.5
     int next_loop = 0;
     float speed=0, speed_template=35;
 
@@ -288,36 +555,40 @@ void test_prawy()
 //            time_c=millis();
             switch (c)
             {
-                case 'a':
-                        if(auto_mode == 1) auto_mode=0;
-                        else auto_mode=1;
-                        cout<< "Auto: "<<auto_mode<<endl;
-                    break;
-                case '+':
-                        w+=1;
-                        if(w>100) w=100;
-                    break;
-                case '-':
-                        w-=1;
-                        if(w<0) w=0;
-                    break;
-                case '[':
+            case 'a':
+                if(auto_mode == 1) auto_mode=0;
+                else auto_mode=1;
+                cout<< "Auto: "<<auto_mode<<endl;
+                break;
+            case '+':
+                w+=1;
+                if(w>100) w=100;
+                break;
+            case '-':
+                w-=1;
+                if(w<0) w=0;
+                break;
+            case '[':
 
-                        speed_template ++;
-                    break;
-                case ']':
-                        speed_template--;
-                    break;
-                case '?':
-                       //robot_regulacja_odleglosci_menu_prawy();
-                    break;
+                speed_template ++;
+                break;
+            case ']':
+                speed_template--;
+                break;
+            case '?':
+                //robot_regulacja_odleglosci_menu_prawy();
+                break;
             }
-           // cout<<"speed_hi="<<speed_hi<<" speed_low="<<speed_low<<" left_wheel="<<robot.GetLeftWheel()<<" right_wheel="<<robot.GetRightWheel()<<" delta="<<time_c-time_c_prev<<endl;
-           // c0count=0;
+            // cout<<"speed_hi="<<speed_hi<<" speed_low="<<speed_low<<" left_wheel="<<robot.GetLeftWheel()<<" right_wheel="<<robot.GetRightWheel()<<" delta="<<time_c-time_c_prev<<endl;
+            // c0count=0;
         }
         float ym=robot.GetDistRight();
-        if(next_loop == 0) { y_=ym; next_loop = 1;}//pierwszy raz nie startuje od zera tylko od wartosci ym
-        float a=0.25;//parametr filtru zakresu 0-1 okresla waznosc poprzednich wartosci (przy 0.25 liczy srednia z jakichs 4 cykli poprzednich)
+        if(next_loop == 0)
+        {
+            y_=ym;    //pierwszy raz nie startuje od zera tylko od wartosci ym
+            next_loop = 1;
+        }
+        float a=0.25;//0.25 parametr filtru zakresu 0-1 okresla waznosc poprzednich wartosci (przy 0.25 liczy srednia z jakichs 4 cykli poprzednich)
         y=(1-a)*y_+a*ym;//filter (filtr inercyjny pierwszego rzedu)
         if(auto_mode)
         {
@@ -356,270 +627,24 @@ void test_prawy()
             uI=u;
             printf("w=%3.0f, e=%4.1f, u=%3.0f, y=%5.1f",w,e,u,y);
         }
-//        w_=w;
+        //w_=w;
         e_=e;
         uI_=uI;
         y_=y;
         if(u>100) u=100;
         if(u<-100) u=-100;
-        float delta_u=25, un=u;
+        //float delta_u=25, un=u;
 
-       // if(abs(u)>2.5) un=u+ (u>=0?1:-1)*delta_u;
+        //if(abs(u)>2.5) un=u+ (u>=0?1:-1)*delta_u;
         //else un=u;
-        robot.SetWheel((int)(-un+speed),(int)(un+speed));
+        robot.SetWheel((int)(-u+speed),(int)(u+speed));
         //robot.SetWheel((int)u,(int)-u);
         robot.Cycle();
 
 
-    cout<<endl;
+        cout<<endl;
     }
     robot.SetWheel(0,0);
     robot.Cycle();
     //robot.StopLog();
-}
-
-
-int main()
-{
-
-    changemode(1); // zmiana trybu terminala na nieblokujacy
-    int priority=70;
-
-    char kb=0;
-    char lastKb = 0;
-    printf("Edukacyjny robot \"Kudlaty\" wersja 1.1 2017 \r\n");
-    int res =  piHiPri(priority);
-    printf("Ustawienie priorytetu na %i: %s\r\n",priority, (res == 0?"OK":"ERROR"));
-    //print_main_menu();
-    //DB db;
-    //db.Open();
-    //Inicjalizacja robota
-
-    RobotState robotState;
-    Robot robot;
-    robot.Init();
-    robot.SetWheel(0,0); // stop
-    robot.Cycle(); //first cycle
-
-    /*stringstream fnamestream;
-    fnamestream << "log_" << time(NULL) <<"_robot.csv";
-    string fname= fnamestream.str();
-    robot.StartLog(fname);*/
-    unsigned long stopTimestamp = 0;
-    unsigned long leftTimestamp = 0;
-    unsigned long returnLeftTimestamp = 0;
-    unsigned long rightTimestamp = 0;
-    unsigned long returnRightTimestamp = 0;
-    unsigned long rightSum = 0;
-    unsigned long leftSum = 0;
-    float stopAngle = 0.0;
-    int state = 0;
-    //Main loop
-    while(kb!= 'q')
-    {
-        //Input
-        kb=0;
-        if(kbhit())
-        {
-            cin>>kb;
-            lastKb = kb;
-            switch(kb)
-            {
-            case '?':
-                robot_info();
-                print_main_menu();
-                break;
-            case 'w':
-                robot.SetWheel(50,50);
-                break;
-            case 's':
-                robot.SetWheel(-50,-50);
-                break;
-            case 'a':
-                robot.SetWheel(-50,0);
-                break;
-            case 'd':
-                robot.SetWheel(0,-50);
-                break;
-            case 'e':
-                robot.SetWheel(0,0);
-                break;
-            }
-            usleep(200);
-
-        }
-        robot.GetState(&robotState);
-        // TODO log
-        printf("%4.1f | %c | %4.1f | %4.1f | state=%i \n", robotState.distFront, lastKb, robotState.distLeft, robotState.distRight, state);
-        //printf("%lu| %lu \n", robotState.microsTimestamp, roundTimestamp);
-        printf("current=%f | stop=%f\n ", robotState.angle, stopAngle);
-        //printf("%lu | %lu \n", leftTimestamp, rightTimestamp);
-        //MongoDB
-        //db.WriteState(&robotState);
-
-        //Read command from db
-        //string command = db.ReadCommand();
-
-        //Process
-        //ProcessCommand(command,&robot, &robotState, &db);
-
-        if(robotState.distFront < 25.0 && lastKb == 'w' && state == 0)
-        {
-            robot.SetWheel(30,30);
-            state = 1;
-        }
-
-        switch(state)
-        {
-        case 1://napotkanie przeszkody i skret w lewo
-            if(robotState.distFront < 15.0 )
-            {
-                stopAngle = robotState.angle;
-                stopTimestamp = robotState.microsTimestamp;
-                printf("Stop: %lu \n", stopTimestamp);
-
-                //robot.SetWheel(0,0);
-                robot.SetWheel(50,-50);
-                state = 2;
-            }
-            break;
-        case 2://policzenie czasu do napotkania krawedzi z lewego czujnika i odkrecanie w lewo
-            if(robotState.distLeft < 25.0)
-            {
-                //robot.SetWheel(0,0);
-                returnLeftTimestamp = robotState.microsTimestamp;
-                leftTimestamp = returnLeftTimestamp - stopTimestamp;
-                //rightSum = returnRightTimestamp + rightTimestamp + 90000;
-                printf("Right: %lu \n", leftTimestamp);
-                robot.SetWheel(-50,50);
-                state = 4;
-            }
-            break;
-        case 3://policzenie czasu do napotkania krawedzi z prawego czujnika i odkrecanie w prawo
-            if(robotState.distRight < 25.0)
-            {
-                //robot.SetWheel(0,0);
-                returnRightTimestamp = robotState.microsTimestamp;
-                rightTimestamp = returnRightTimestamp - stopTimestamp;
-                //leftSum = returnLeftTimestamp + leftTimestamp + 90000;
-                printf("Left: %lu \n", rightTimestamp);
-                robot.SetWheel(50,-50);
-                state = 5;
-            }
-            break;
-        case 4://powrot do wczesniejszej pozycji (na podstawie czasu skretu w prawo) i odkrecanie w lewo
-            if(robotState.angle >= stopAngle && robotState.angle < stopAngle + 5)
-            {
-                //robot.SetWheel(0,0);
-                stopTimestamp = robotState.microsTimestamp;
-                robot.SetWheel(-50,50);
-                state = 3;
-            }
-            /*if(rightSum > robotState.microsTimestamp )
-            {
-                printf("righttimestamp");
-                robot.Cycle();
-            }
-            if(rightSum < robotState.microsTimestamp)
-            {
-                robot.SetWheel(0,0);
-                stopTimestamp = robotState.microsTimestamp;
-                printf("righttimestampstop: %lu \n", stopTimestamp);
-                //robot.SetWheel(-50,50);
-                //state = 3;
-            }*/
-            break;
-        case 5://po powrocie do pierwszej pozycji zatrzymanie i wypisanie czasow skretu w lewo i prawo
-            if(robotState.angle <= stopAngle && robotState.angle > stopAngle - 5)
-            {
-                robot.SetWheel(0,0);
-                printf("LeftTimestamp: %lu | RightTimestamp: %lu \n", leftTimestamp, rightTimestamp);
-                state = 6;
-            }
-            /*if(leftSum > robotState.microsTimestamp )
-            {
-                printf("lefttimestamp");
-                robot.Cycle();
-            }
-            else if(leftSum < robotState.microsTimestamp)
-            {
-                robot.SetWheel(0,0);
-                printf("LeftTimestamp: %lu | RightTimestamp: %lu \n", leftTimestamp, rightTimestamp);
-                state = 6;
-            }*/
-            break;
-        case 6://obliczenie kierunku objazdu przeszkody
-            if(rightTimestamp > leftTimestamp)
-            {
-                state = 7;
-            }
-            else if(leftTimestamp > rightTimestamp)
-            {
-                state = 8;
-            }
-            break;
-        case 7://ominiecie przeszkody z prawej strony
-            robot.SetWheel(40,-40);
-            state = 9;
-            break;
-        case 8://ominiecie przeszkody z lewej strony
-            robot.SetWheel(-40,40);
-            state = 9;
-            break;
-        case 9://okrazanie przeszkody z lewej lub prawej strony
-            if(robotState.distRight < 25.0)
-            {
-                    robot_regulacja_odleglosci_prawy(robotState.distRight, stopAngle);
-                    robot.SetWheel(0,0);
-                    state = 10;
-            }
-            if(robotState.distLeft < 25.0)
-            {
-                    robot_regulacja_odleglosci_lewy(robotState.distLeft, stopAngle);
-                    robot.SetWheel(0,0);
-                    state = 10;
-            }
-            break;
-        case 10:
-            robot.SetWheel(50,-50);
-            state = 12;
-            break;
-        case 11:
-            robot.SetWheel(-50,50);
-            state = 12;
-            break;
-        case 12:
-            float currentAngle;
-            currentAngle = robot.GetAngle();
-            if(currentAngle > stopAngle && currentAngle < stopAngle + 10)
-            {
-                robot.SetWheel(0,0);
-                state = 13;
-            }
-            break;
-        case 13:
-            robot.SetWheel(50,50);
-            state = 14;
-            break;
-        case 14:
-            if(robotState.distFront < 15.0)
-            {
-                robot.SetWheel(0,0);
-                break;
-            }
-            break;
-        default:
-            robot.Cycle();
-        }
-
-        //Output
-        robot.Cycle();
-    }
-    //test_prawy();
-    robot.SetWheel(0,0);
-    robot.Cycle();
-    robot.StopLog();
-    changemode(0);
-
-    return 0;
 }
